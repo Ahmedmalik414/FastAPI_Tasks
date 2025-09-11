@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloggram - Social Blog Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to bottom, #ffffff, #f0f2f5);
+            margin: 0;
+            padding: 0;
+            color: #262626;
+            transition: background 0.3s;
+        }
+        body.dark-mode {
+            background: linear-gradient(to bottom, #1a1a1a, #2c2c2c);
+            color: #ffffff;
+        }
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+        }
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            z-index: 30;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            max-width: 90%;
+            text-align: center;
+        }
+        .notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .notification.success {
+            background: #0095f6;
+        }
+        .notification.error {
+            background: #ed4956;
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid #dbdbdb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .header.dark-mode {
+            background: #262626;
+            border-bottom: 1px solid #444;
+        }
+        .header h1 {
+            font-size: 30px;
+            margin: 0;
+            font-weight: 400;
+            background: linear-gradient(to right, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-icons {
+            display: flex;
+            align-items: center;
+        }
+        .nav-icons i, .nav-icons .avatar {
+            font-size: 26px;
+            margin-left: 25px;
+            cursor: pointer;
+            color: #262626;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .nav-icons .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .nav-icons i:hover, .nav-icons .avatar:hover {
+            color: #0095f6;
+            transform: scale(1.1);
+        }
+        .dark-mode .nav-icons i, .dark-mode .nav-icons .avatar {
+            color: #ffffff;
+        }
+        #currentUserName {
+            font-size: 18px;
+            font-weight: 500;
+            margin-left: auto;
+            margin-right: 25px;
+        }
+        .dark-mode #currentUserName {
+            color: #ffffff;
+        }
+        .section {
+            background: white;
+            padding: 30px;
+            margin: 40px 0;
+            border-radius: 20px;
+            border: 1px solid #dbdbdb;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+            transition: box-shadow 0.3s, background 0.3s;
+        }
+        .dark-mode .section {
+            background: #333;
+            border: 1px solid #444;
+        }
+        .section:hover {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+        h2 {
+            font-size: 26px;
+            font-weight: 400;
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .dark-mode h2 {
+            color: #ffffff;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0 20px 0;
+            border-radius: 10px;
+            border: 1px solid #dbdbdb;
+            background-color: #fafafa;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, background 0.3s;
+        }
+        .dark-mode input, .dark-mode textarea {
+            background-color: #444;
+            border: 1px solid #555;
+            color: #ffffff;
+        }
+        input:focus, textarea:focus {
+            border-color: #0095f6;
+            outline: none;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background-color: #0095f6;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+        button:hover {
+            background-color: #1877f2;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button.loading::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #ffffff;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .message {
+            margin-top: 20px;
+            font-size: 15px;
+            text-align: center;
+        }
+        .success { color: #0095f6; }
+        .error { color: #ed4956; }
+        .post-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+        }
+        .post {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+            transition: box-shadow 0.3s, transform 0.2s, background 0.3s;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .post:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .dark-mode .post {
+            background: #333;
+            border: 1px solid #444;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .post-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(to bottom, #dbdbdb, #f0f0f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8e8e8e;
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #dbdbdb;
+        }
+        .dark-mode .post-header {
+            border-bottom: 1px solid #444;
+        }
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        .post-username {
+            font-weight: 500;
+            font-size: 18px;
+            flex: 1;
+        }
+        .dark-mode .post-username {
+            color: #ffffff;
+        }
+        .post-time {
+            color: #8e8e8e;
+            font-size: 14px;
+            margin-left: auto;
+        }
+        .dark-mode .post-time {
+            color: #bbb;
+        }
+        .post-menu {
+            cursor: pointer;
+            font-size: 24px;
+            color: #8e8e8e;
+            margin-left: 15px;
+        }
+        .post-menu:hover {
+            color: #262626;
+        }
+        .dark-mode .post-menu:hover {
+            color: #ffffff;
+        }
+        .post-title {
+            font-size: 22px;
+            font-weight: 500;
+            padding: 20px 25px 0;
+        }
+        .dark-mode .post-title {
+            color: #ffffff;
+        }
+        .post-content {
+            padding: 0 25px 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .dark-mode .post-content {
+            color: #ffffff;
+        }
+        .post-actions {
+            display: flex;
+            justify-content: flex-start;
+            padding: 15px 25px;
+            border-top: 1px solid #dbdbdb;
+            gap: 30px;
+        }
+        .dark-mode .post-actions {
+            border-top: 1px solid #444;
+        }
+        .post-actions i, .post-actions span {
+            font-size: 28px;
+            cursor: pointer;
+            color: #8e8e8e;
+            transition: color 0.2s;
+        }
+        .post-actions i:hover, .post-actions span:hover {
+            color: #0095f6;
+        }
+        .dark-mode .post-actions i, .dark-mode .post-actions span {
+            color: #ffffff;
+        }
+        .like-count {
+            font-size: 16px;
+            color: #8e8e8e;
+            margin-left: auto;
+            font-weight: 500;
+        }
+        .dark-mode .like-count {
+            color: #bbb;
+        }
+        .comments {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0 25px;
+            transition: max-height 0.3s ease-out;
+        }
+        .comments.visible {
+            max-height: 600px;
+            padding: 20px 25px;
+        }
+        .comment {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        .comment-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .comment-body {
+            flex: 1;
+            background: #f0f0f0;
+            padding: 12px 15px;
+            border-radius: 15px;
+        }
+        .dark-mode .comment-body {
+            background: #444;
+        }
+        .comment-username {
+            font-weight: 500;
+            font-size: 15px;
+        }
+        .dark-mode .comment-username {
+            color: #ffffff;
+        }
+        .comment-text {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .dark-mode .comment-text {
+            color: #ffffff;
+        }
+        .comment-menu {
+            margin-left: 10px;
+            font-size: 18px;
+            color: #8e8e8e;
+            cursor: pointer;
+        }
+        .comment-menu:hover {
+            color: #262626;
+        }
+        .dark-mode .comment-menu:hover {
+            color: #ffffff;
+        }
+        .add-comment {
+            display: flex;
+            align-items: center;
+            padding: 20px 25px;
+            border-top: 1px solid #dbdbdb;
+        }
+        .dark-mode .add-comment {
+            border-top: 1px solid #444;
+        }
+        .add-comment .comment-avatar {
+            background: #dbdbdb;
+            color: #fff;
+        }
+        .add-comment input {
+            flex: 1;
+            margin: 0 15px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 15px;
+        }
+        .add-comment button {
+            width: auto;
+            padding: 12px 25px;
+            font-size: 15px;
+            border-radius: 25px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+        .dark-mode .modal-content {
+            background: #333;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .close {
+            float: right;
+            font-size: 26px;
+            cursor: pointer;
+            color: #8e8e8e;
+        }
+        .close:hover {
+            color: #262626;
+        }
+        .dark-mode .close:hover {
+            color: #ffffff;
+        }
+        .stories {
+            margin: 40px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .dark-mode .stories {
+            background: #333;
+        }
+        .story-row {
+            display: flex;
+            overflow-x: auto;
+            gap: 20px;
+        }
+        .story {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .trending {
+            margin: 40px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .dark-mode .trending {
+            background: #333;
+        }
+        .trending ul {
+            list-style: none;
+            padding: 0;
+        }
+        .trending li {
+            font-size: 18px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        .trending li:hover {
+            color: #0095f6;
+        }
+        .dark-mode .trending li {
+            color: #ffffff;
+        }
+        .recommended-users {
+            margin: 40px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .dark-mode .recommended-users {
+            background: #333;
+        }
+        .user-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .user {
+            width: 200px;
+            text-align: center;
+        }
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin: 0 auto 10px;
+        }
+        .user-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .dark-mode .user-name {
+            color: #ffffff;
+        }
+        .ads {
+            margin: 40px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .dark-mode .ads {
+            background: #333;
+        }
+        .ad {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .ad-image {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to bottom, #dbdbdb, #f0f0f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8e8e8e;
+            font-size: 18px;
+            border-radius: 10px;
+        }
+        .ad-text {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        .dark-mode .ad-text {
+            color: #ffffff;
+        }
+        .footer {
+            margin: 40px 0;
+            padding: 20px;
+            text-align: center;
+            color: #8e8e8e;
+        }
+        .dark-mode .footer {
+            color: #bbb;
+        }
+        .footer a {
+            color: #0095f6;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 900px) {
+            .app-container {
+                padding: 20px;
+            }
+            .modal-content {
+                width: 90%;
+            }
+            .header h1 {
+                font-size: 26px;
+            }
+            .post-username, .post-title {
+                font-size: 18px;
+            }
+            .post-content, .comment-username, .comment-text {
+                font-size: 15px;
+            }
+            .avatar {
+                width: 52px;
+                height: 52px;
+                font-size: 20px;
+            }
+            .comment-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            .post-image {
+                height: 200px;
+            }
+            .story {
+                width: 70px;
+                height: 70px;
+                font-size: 20px;
+            }
+            .user {
+                width: 150px;
+            }
+            .user-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            .ad-image {
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>Bloggram</h1>
+            <span id="currentUserName"></span>
+            <div class="nav-icons">
+                <i class="fas fa-plus" onclick="if(checkLoggedIn()) openModal('createPostModal');"></i>
+                <div class="avatar" id="profileAvatar" onclick="toggleProfile()" style="display: none;"></div>
+                <i class="fas fa-sign-out-alt" onclick="logout()" style="display: none;" id="logoutIcon"></i>
+                <i class="fas fa-moon" onclick="toggleDarkMode()"></i>
+            </div>
+        </div>
+        <div id="notification" class="notification"></div>
+        <div class="stories">
+            <h2>Stories</h2>
+            <div class="story-row">
+                <div class="story">A</div>
+                <div class="story">B</div>
+                <div class="story">C</div>
+                <div class="story">D</div>
+                <div class="story">E</div>
+                <div class="story">F</div>
+                <div class="story">G</div>
+                <div class="story">H</div>
+                <div class="story">I</div>
+                <div class="story">J</div>
+            </div>
+        </div>
+        <div class="section" id="profileSection" style="display: none;">
+            <h2>Your Profile</h2>
+            <div id="profileContainer" class="post-feed"></div>
+        </div>
+        <div class="section">
+            <h2>Explore Feed</h2>
+            <div id="postsContainer" class="post-feed"></div>
+        </div>
+        <div class="trending">
+            <h2>Trending Topics</h2>
+            <ul>
+                <li>#AIRevolution</li>
+                <li>#TravelGoals</li>
+                <li>#TechNews</li>
+                <li>#FitnessJourney</li>
+                <li>#FoodieLife</li>
+                <li>#CodingTips</li>
+                <li>#NatureLovers</li>
+                <li>#BookRecommendations</li>
+                <li>#MovieReviews</li>
+                <li>#GamingWorld</li>
+            </ul>
+        </div>
+        <div class="recommended-users">
+            <h2>Recommended Users</h2>
+            <div class="user-row">
+                <div class="user">
+                    <div class="user-avatar">U1</div>
+                    <div class="user-name">@user1</div>
+                </div>
+                <div class="user">
+                    <div class="user-avatar">U2</div>
+                    <div class="user-name">@user2</div>
+                </div>
+                <div class="user">
+                    <div class="user-avatar">U3</div>
+                    <div class="user-name">@user3</div>
+                </div>
+                <div class="user">
+                    <div class="user-avatar">U4</div>
+                    <div class="user-name">@user4</div>
+                </div>
+                <div class="user">
+                    <div class="user-avatar">U5</div>
+                    <div class="user-name">@user5</div>
+                </div>
+            </div>
+        </div>
+        <div class="ads">
+            <h2>Sponsored</h2>
+            <div class="ad">
+                <div class="ad-image">Ad 1 Placeholder</div>
+                <div class="ad-text">Discover amazing products!</div>
+            </div>
+            <div class="ad">
+                <div class="ad-image">Ad 2 Placeholder</div>
+                <div class="ad-text">Join our community today!</div>
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 Bloggram. All rights reserved.</p>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Contact Us</a>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('userModal')">&times;</span>
+            <h2>Login</h2>
+            <input type="number" id="setUserId" placeholder="Enter Your User ID">
+            <button onclick="setCurrentUser(document.getElementById('setUserId').value)">Login</button>
+            <p style="text-align: center; margin: 15px 0;">or</p>
+            <h2>Create Account</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="createUser()">Sign Up</button>
+            <div id="userMsg" class="message"></div>
+        </div>
+    </div>
+
+    <div id="createPostModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createPostModal')">&times;</span>
+            <h2>New Post</h2>
+            <input type="text" id="postTitle" placeholder="Title">
+            <textarea id="postContent" placeholder="What's on your mind?"></textarea>
+            <button onclick="createPost()">Post</button>
+            <div id="postMsg" class="message"></div>
+        </div>
+    </div>
+
+    <div id="editPostModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editPostModal')">&times;</span>
+            <h2>Edit Post</h2>
+            <input type="hidden" id="editPostId">
+            <input type="text" id="editPostTitle" placeholder="Title">
+            <textarea id="editPostContent" placeholder="Content"></textarea>
+            <button onclick="updatePost()">Update</button>
+            <div id="editPostMsg" class="message"></div>
+        </div>
+    </div>
+
+    <div id="createCommentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createCommentModal')">&times;</span>
+            <h2>Add Comment</h2>
+            <input type="hidden" id="commentPostId">
+            <textarea id="commentText" placeholder="Write a comment..."></textarea>
+            <button onclick="createComment()">Comment</button>
+            <div id="commentMsg" class="message"></div>
+        </div>
+    </div>
+
+    <div id="editCommentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editCommentModal')">&times;</span>
+            <h2>Edit Comment</h2>
+            <input type="hidden" id="editCommentId">
+            <textarea id="editCommentText" placeholder="Edit comment..."></textarea>
+            <button onclick="updateComment()">Update</button>
+            <div id="editCommentMsg" class="message"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "http://127.0.0.1:8008";
+        let currentUser = null;
+        const usernames = {};
+        let isProfileVisible = false;
+
+        function showNotification(message, type) {
+            const notification = document.getElementById("notification");
+            notification.innerText = message;
+            notification.className = `notification ${type} show`;
+            setTimeout(() => {
+                notification.className = `notification ${type}`;
+            }, 3000);
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            document.querySelector('.header').classList.toggle('dark-mode');
+            document.querySelectorAll('.section').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelectorAll('.post').forEach(el => el.classList.toggle('dark-mode'));
+            document.querySelector('.stories').classList.toggle('dark-mode');
+            document.querySelector('.trending').classList.toggle('dark-mode');
+            document.querySelector('.recommended-users').classList.toggle('dark-mode');
+            document.querySelector('.ads').classList.toggle('dark-mode');
+        }
+
+        function logout() {
+            localStorage.removeItem('userId');
+            currentUser = null;
+            document.getElementById('currentUserName').innerText = '';
+            document.getElementById('logoutIcon').style.display = 'none';
+            document.getElementById('profileAvatar').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'none';
+            isProfileVisible = false;
+            openModal('userModal');
+            showNotification("Logged out successfully", "success");
+        }
+
+        function toggleProfile() {
+            if (!checkLoggedIn()) return;
+            isProfileVisible = !isProfileVisible;
+            document.getElementById('profileSection').style.display = isProfileVisible ? 'block' : 'none';
+            if (isProfileVisible) viewProfile();
+        }
+
+        async function getUsername(userId) {
+            if (!usernames[userId]) {
+                try {
+                    const res = await fetch(`${BASE_URL}/user/${userId}`);
+                    if (res.ok) {
+                        const user = await res.json();
+                        usernames[userId] = user.username;
+                    } else {
+                        usernames[userId] = `User ${userId}`;
+                    }
+                } catch {
+                    usernames[userId] = `User ${userId}`;
+                }
+            }
+            return usernames[userId];
+        }
+
+        function checkLoggedIn() {
+            if (!currentUser) {
+                showNotification("Please log in first.", "error");
+                openModal('userModal');
+                return false;
+            }
+            return true;
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function setCurrentUser(userId) {
+            const button = document.querySelector('#userModal button:first-of-type');
+            button.classList.add('loading');
+            try {
+                const res = await fetch(`${BASE_URL}/user/${userId}`);
+                if (res.ok) {
+                    currentUser = await res.json();
+                    localStorage.setItem('userId', userId);
+                    document.getElementById('currentUserName').innerText = `@${currentUser.username}`;
+                    document.getElementById('logoutIcon').style.display = 'inline';
+                    document.getElementById('profileAvatar').style.display = 'flex';
+                    document.getElementById('profileAvatar').innerText = currentUser.username.charAt(0).toUpperCase();
+                    closeModal('userModal');
+                    showNotification("Logged in successfully", "success");
+                    viewFeed();
+                } else {
+                    const msg = document.getElementById("userMsg");
+                    msg.innerText = "User not found";
+                    msg.className = "message error";
+                }
+            } catch (err) {
+                const msg = document.getElementById("userMsg");
+                msg.innerText = `Error: ${err.message}`;
+                msg.className = "message error";
+            } finally {
+                button.classList.remove('loading');
+            }
+        }
+
+        async function createUser() {
+            const button = document.querySelector('#userModal button:last-of-type');
+            button.classList.add('loading');
+            const data = {
+                username: document.getElementById("username").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            };
+            try {
+                const res = await fetch(`${BASE_URL}/create_account`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                const resp = await res.json();
+                const msg = document.getElementById("userMsg");
+                if (res.ok) {
+                    msg.innerText = `User created with ID ${resp.id}`;
+                    msg.className = "message success";
+                    setCurrentUser(resp.id);
+                } else {
+                    msg.innerText = `Error: ${JSON.stringify(resp, null, 2)}`;
+                    msg.className = "message error";
+                    showNotification("Failed to create user", "error");
+                }
+            } catch (err) {
+                const msg = document.getElementById("userMsg");
+                msg.innerText = `Error: ${err.message}`;
+                msg.className = "message error";
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                button.classList.remove('loading');
+            }
+        }
+
+        async function createPost() {
+            if (!checkLoggedIn()) return;
+            const button = document.querySelector('#createPostModal button');
+            button.classList.add('loading');
+            const data = {
+                title: document.getElementById("postTitle").value,
+                content: document.getElementById("postContent").value
+            };
+            try {
+                const res = await fetch(`${BASE_URL}/create_post/${currentUser.id}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                const resp = await res.json();
+                const msg = document.getElementById("postMsg");
+                if (res.ok) {
+                    msg.innerText = `Post created with ID ${resp.id}`;
+                    msg.className = "message success";
+                    closeModal('createPostModal');
+                    if (isProfileVisible) viewProfile();
+                    showNotification("Post created successfully", "success");
+                } else {
+                    msg.innerText = `Error: ${JSON.stringify(resp, null, 2)}`;
+                    msg.className = "message error";
+                    showNotification("Failed to create post", "error");
+                }
+            } catch (err) {
+                const msg = document.getElementById("postMsg");
+                msg.innerText = `Error: ${err.message}`;
+                msg.className = "message error";
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                button.classList.remove('loading');
+            }
+        }
+
+        async function updatePost() {
+            if (!checkLoggedIn()) return;
+            const button = document.querySelector('#editPostModal button');
+            button.classList.add('loading');
+            const postId = document.getElementById("editPostId").value;
+            const data = {
+                title: document.getElementById("editPostTitle").value,
+                content: document.getElementById("editPostContent").value
+            };
+            try {
+                const res = await fetch(`${BASE_URL}/update_post/${postId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                const resp = await res.json();
+                const msg = document.getElementById("editPostMsg");
+                if (res.ok) {
+                    msg.innerText = "Post updated";
+                    msg.className = "message success";
+                    closeModal('editPostModal');
+                    viewProfile();
+                    showNotification("Post updated successfully", "success");
+                } else {
+                    msg.innerText = `Error: ${JSON.stringify(resp, null, 2)}`;
+                    msg.className = "message error";
+                    showNotification("Failed to update post", "error");
+                }
+            } catch (err) {
+                const msg = document.getElementById("editPostMsg");
+                msg.innerText = `Error: ${err.message}`;
+                msg.className = "message error";
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                button.classList.remove('loading');
+            }
+        }
+
+        async function deletePost(postId) {
+            if (!confirm("Delete this post?")) return;
+            const button = document.querySelector('#profileContainer button');
+            if (button) button.classList.add('loading');
+            try {
+                const res = await fetch(`${BASE_URL}/delete_post/${postId}`, {
+                    method: "DELETE"
+                });
+                if (res.ok) {
+                    viewProfile();
+                    showNotification("Post deleted successfully", "success");
+                } else {
+                    const resp = await res.json();
+                    showNotification(`Error: ${JSON.stringify(resp)}`, "error");
+                }
+            } catch (err) {
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                if (button) button.classList.remove('loading');
+            }
+        }
+
+        async function createComment() {
+            if (!checkLoggedIn()) return;
+            const button = document.querySelector('#createCommentModal button');
+            button.classList.add('loading');
+            const postId = document.getElementById("commentPostId").value;
+            const data = {
+                text: document.getElementById("commentText").value,
+                user_id: currentUser.id,
+                post_id: parseInt(postId)
+            };
+            try {
+                const res = await fetch(`${BASE_URL}/create_comment/${currentUser.id}/${postId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                const resp = await res.json();
+                const msg = document.getElementById("commentMsg");
+                if (res.ok) {
+                    msg.innerText = `Comment created with ID ${resp.id}`;
+                    msg.className = "message success";
+                    closeModal('createCommentModal');
+                    viewFeed();
+                    showNotification("Comment created successfully", "success");
+                } else {
+                    msg.innerText = `Error: ${JSON.stringify(resp, null, 2)}`;
+                    msg.className = "message error";
+                    showNotification("Failed to create comment", "error");
+                }
+            } catch (err) {
+                const msg = document.getElementById("commentMsg");
+                msg.innerText = `Error: ${err.message}`;
+                msg.className = "message error";
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                button.classList.remove('loading');
+            }
+        }
+
+        async function createQuickComment(postId, textInput) {
+            if (!checkLoggedIn()) return;
+            const text = textInput.value.trim();
+            if (!text) return;
+            const button = textInput.nextElementSibling;
+            button.classList.add('loading');
+            const data = {
+                text,
+                user_id: currentUser.id,
+                post_id: parseInt(postId)
+            };
+            try {
+                const res = await fetch(`${BASE_URL}/create_comment/${currentUser.id}/${postId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    textInput.value = '';
+                    viewFeed();
+                    showNotification("Comment created successfully", "success");
+                } else {
+                    const resp = await res.json();
+                    showNotification(`Error: ${JSON.stringify(resp)}`, "error");
+                }
+            } catch (err) {
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                button.classList.remove('loading');
+            }
+        }
+
+        async function updateComment() {
+            if (!checkLoggedIn()) return;
+            const button = document.querySelector('#editCommentModal button');
+            button.classList.add('loading');
+            const commentId = document.getElementById("editCommentId").value;
+            const data = { text: document.getElementById("editCommentText").value };
+            try {
+                const res = await fetch(`${BASE_URL}/update_comment/${commentId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                const resp = await res.json();
+                const msg = document.getElementById("editCommentMsg");
+                if (res.ok) {
+                    msg.innerText = "Comment updated";
+                    msg.className = "message success";
+                    closeModal('editCommentModal');
+                    viewFeed();
+                    showNotification("Comment updated successfully", "success");
+                } else {
+                    msg.innerText = `Error: ${JSON.stringify(resp, null, 2)}`;
+                    msg.className = "message error";
+                    showNotification("Failed to update comment", "error");
+                }
+            } catch (err) {
+                const msg = document.getElementById("editCommentMsg");
+                msg.innerText = `Error: ${err.message}`;
+                msg.className = "message error";
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                button.classList.remove('loading');
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (!confirm("Delete this comment?")) return;
+            const button = document.querySelector('#postsContainer button');
+            if (button) button.classList.add('loading');
+            try {
+                const res = await fetch(`${BASE_URL}/delete_comment/${commentId}`, {
+                    method: "DELETE"
+                });
+                if (res.ok) {
+                    viewFeed();
+                    showNotification("Comment deleted successfully", "success");
+                } else {
+                    const resp = await res.json();
+                    showNotification(`Error: ${JSON.stringify(resp)}`, "error");
+                }
+            } catch (err) {
+                showNotification(`Error: ${err.message}`, "error");
+            } finally {
+                if (button) button.classList.remove('loading');
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        async function viewProfile() {
+            if (!checkLoggedIn()) return;
+            const container = document.getElementById("profileContainer");
+            container.innerHTML = "";
+            try {
+                const postsRes = await fetch(`${BASE_URL}/posts/${currentUser.id}`);
+                const posts = await postsRes.json();
+                if (!postsRes.ok) throw posts;
+                const viewUsername = await getUsername(currentUser.id);
+                for (let post of posts) {
+                    const postDiv = document.createElement("div");
+                    postDiv.className = "post";
+                    await renderPost(post, postDiv, viewUsername, true);
+                    container.appendChild(postDiv);
+                }
+            } catch (err) {
+                const errorDiv = document.createElement("div");
+                errorDiv.innerText = `Error: ${JSON.stringify(err, null, 2)}`;
+                errorDiv.className = "error";
+                container.appendChild(errorDiv);
+                showNotification("Failed to load profile posts", "error");
+            }
+        }
+
+        async function viewFeed() {
+            const container = document.getElementById("postsContainer");
+            container.innerHTML = "";
+            let allPosts = [];
+            for (let u = 1; u <= 10; u++) {
+                if (currentUser && u === currentUser.id) continue;
+                try {
+                    const postsRes = await fetch(`${BASE_URL}/posts/${u}`);
+                    if (postsRes.ok) {
+                        let posts = await postsRes.json();
+                        posts = posts.map(p => ({...p, user_id: u}));
+                        allPosts = allPosts.concat(posts);
+                    }
+                } catch {}
+            }
+            if (allPosts.length === 0) {
+                showNotification("No posts found", "error");
+                return;
+            }
+            allPosts = shuffle(allPosts);
+            for (let post of allPosts) {
+                const postDiv = document.createElement("div");
+                postDiv.className = "post";
+                const viewUsername = await getUsername(post.user_id);
+                await renderPost(post, postDiv, viewUsername, false);
+                container.appendChild(postDiv);
+            }
+        }
+
+        async function renderPost(post, postDiv, viewUsername, isProfile) {
+            const image = document.createElement("div");
+            image.className = "post-image";
+            image.innerText = "Image Placeholder";
+            postDiv.appendChild(image);
+
+            const header = document.createElement("div");
+            header.className = "post-header";
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.innerText = viewUsername.charAt(0).toUpperCase();
+            const usernameSpan = document.createElement("span");
+            usernameSpan.className = "post-username";
+            usernameSpan.innerText = viewUsername;
+            const timeSpan = document.createElement("span");
+            timeSpan.className = "post-time";
+            timeSpan.innerText = Math.floor(Math.random() * 24) + "h ago";
+            header.appendChild(avatar);
+            header.appendChild(usernameSpan);
+            header.appendChild(timeSpan);
+            if (currentUser && post.user_id === currentUser.id && isProfile) {
+                const menu = document.createElement("i");
+                menu.className = "fas fa-ellipsis-h post-menu";
+                menu.onclick = () => {
+                    if (confirm("Edit or Delete? Click OK to Edit, Cancel to Delete")) {
+                        document.getElementById("editPostId").value = post.id;
+                        document.getElementById("editPostTitle").value = post.title;
+                        document.getElementById("editPostContent").value = post.content;
+                        openModal('editPostModal');
+                    } else {
+                        deletePost(post.id);
+                    }
+                };
+                header.appendChild(menu);
+            }
+            postDiv.appendChild(header);
+
+            const title = document.createElement("div");
+            title.className = "post-title";
+            title.innerText = post.title;
+            postDiv.appendChild(title);
+
+            const content = document.createElement("div");
+            content.className = "post-content";
+            content.innerText = post.content;
+            postDiv.appendChild(content);
+
+            const actions = document.createElement("div");
+            actions.className = "post-actions";
+            const commentToggle = document.createElement("span");
+            commentToggle.innerText = "View Comments";
+            commentToggle.style.cursor = "pointer";
+            commentToggle.onclick = () => {
+                const commentsSection = postDiv.querySelector(".comments");
+                commentsSection.classList.toggle("visible");
+                commentToggle.innerText = commentsSection.classList.contains("visible") ? "Hide Comments" : "View Comments";
+            };
+            actions.innerHTML = `
+                <i class="far fa-heart"></i>
+                <i class="far fa-comment" onclick="document.getElementById('commentPostId').value = ${post.id}; openModal('createCommentModal');"></i>
+                <i class="far fa-share-square"></i>
+            `;
+            actions.appendChild(commentToggle);
+            const likeCount = document.createElement("span");
+            likeCount.className = "like-count";
+            likeCount.innerText = Math.floor(Math.random() * 100) + " likes";
+            actions.appendChild(likeCount);
+            postDiv.appendChild(actions);
+
+            const commentsSection = document.createElement("div");
+            commentsSection.className = "comments";
+            const commentsRes = await fetch(`${BASE_URL}/posts/${post.id}/comments`);
+            const comments = await commentsRes.json();
+            for (let comment of comments) {
+                const commentUsername = await getUsername(comment.user_id);
+                const commentDiv = document.createElement("div");
+                commentDiv.className = "comment";
+                const commentAvatar = document.createElement("div");
+                commentAvatar.className = "comment-avatar";
+                commentAvatar.innerText = commentUsername.charAt(0).toUpperCase();
+                const commentBody = document.createElement("div");
+                commentBody.className = "comment-body";
+                const commentUsernameSpan = document.createElement("span");
+                commentUsernameSpan.className = "comment-username";
+                commentUsernameSpan.innerText = commentUsername;
+                const commentText = document.createElement("span");
+                commentText.className = "comment-text";
+                commentText.innerText = ` ${comment.text}`;
+                commentBody.appendChild(commentUsernameSpan);
+                commentBody.appendChild(commentText);
+                commentDiv.appendChild(commentAvatar);
+                commentDiv.appendChild(commentBody);
+                if (currentUser && comment.user_id === currentUser.id) {
+                    const commentMenu = document.createElement("i");
+                    commentMenu.className = "fas fa-ellipsis-h comment-menu";
+                    commentMenu.onclick = () => {
+                        if (confirm("Edit or Delete? Click OK to Edit, Cancel to Delete")) {
+                            document.getElementById("editCommentId").value = comment.id;
+                            document.getElementById("editCommentText").value = comment.text;
+                            openModal('editCommentModal');
+                        } else {
+                            deleteComment(comment.id);
+                        }
+                    };
+                    commentDiv.appendChild(commentMenu);
+                }
+                commentsSection.appendChild(commentDiv);
+            }
+            postDiv.appendChild(commentsSection);
+
+            const addComment = document.createElement("div");
+            addComment.className = "add-comment";
+            const addAvatar = document.createElement("div");
+            addAvatar.className = "comment-avatar";
+            if (currentUser) addAvatar.innerText = currentUser.username.charAt(0).toUpperCase();
+            const addInput = document.createElement("input");
+            addInput.type = "text";
+            addInput.placeholder = "Add a comment...";
+            const addButton = document.createElement("button");
+            addButton.innerText = "Post";
+            addButton.onclick = () => createQuickComment(post.id, addInput);
+            addComment.appendChild(addAvatar);
+            addComment.appendChild(addInput);
+            addComment.appendChild(addButton);
+            postDiv.appendChild(addComment);
+        }
+
+        // Check localStorage for persisted user ID on load
+        window.addEventListener('load', () => {
+            const savedUserId = localStorage.getItem('userId');
+            if (savedUserId) {
+                setCurrentUser(savedUserId);
+            } else {
+                openModal('userModal');
+            }
+        });
+    </script>
+</body>
+</html>

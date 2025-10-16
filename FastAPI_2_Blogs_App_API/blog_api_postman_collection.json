@@ -1,0 +1,127 @@
+{
+  "info": {
+    "name": "Blog API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "user@example.com",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "yourpassword",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8008/login",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1"
+          ],
+          "port": "8008",
+          "path": [
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Me",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8008/me",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1"
+          ],
+          "port": "8008",
+          "path": [
+            "me"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Refresh Token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8008/refresh",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1"
+          ],
+          "port": "8008",
+          "path": [
+            "refresh"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8008/logout",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1"
+          ],
+          "port": "8008",
+          "path": [
+            "logout"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create Account",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"newuser\", \"email\": \"newuser@example.com\", \"password\": \"password123\", \"role\": \"user\"}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8008/create_account",
+          "protocol": "http",
+          "host": [
+            "127.0.0.1"
+          ],
+          "port": "8008",
+          "path": [
+            "create_account"
+          ]
+        }
+      }
+    }
+  ]
+}

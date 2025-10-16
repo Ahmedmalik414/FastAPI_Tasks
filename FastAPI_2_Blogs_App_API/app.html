@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Blogs App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0;
+      color: #333;
+    }
+    header {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    header h1 { margin: 0; }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    button:hover { opacity: 0.9; }
+    main {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+    }
+    h2 { margin-top: 30px; }
+    input, textarea {
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .hidden { display: none; }
+    .post, .comment {
+      background: #f9f9ff;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 10px;
+    }
+    .comment { border-left: 4px solid #667eea; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📝 My Blogs App</h1>
+    <div>
+      <button id="logoutBtn" class="hidden" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Auth Section -->
+    <div id="authSection">
+      <h2>Login</h2>
+      <input id="loginEmail" placeholder="Email">
+      <input id="loginPwd" type="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+
+      <h2>Register</h2>
+      <input id="regName" placeholder="Username">
+      <input id="regEmail" placeholder="Email">
+      <input id="regPwd" type="password" placeholder="Password">
+      <select id="regRole">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button onclick="register()">Register</button>
+    </div>
+
+    <!-- Blog Section -->
+    <div id="blogSection" class="hidden">
+      <h2>Welcome <span id="currentUser"></span> 🎉</h2>
+
+      <h3>Create Post</h3>
+      <input id="postTitle" placeholder="Post title">
+      <textarea id="postContent" placeholder="Post content"></textarea>
+      <button onclick="createPost()">Create</button>
+
+      <h3>All Posts</h3>
+      <div id="postsContainer"></div>
+    </div>
+  </main>
+
+  <script>
+    const API_URL = "http://127.0.0.1:8008";
+    let accessToken = null;
+    let currentUser = null;
+
+    // 🔹 Login
+    async function login() {
+      const email = document.getElementById("loginEmail").value;
+      const pwd = document.getElementById("loginPwd").value;
+
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", pwd);
+
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        accessToken = data.access_token;
+        await getMe();
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("blogSection").classList.remove("hidden");
+        document.getElementById("logoutBtn").classList.remove("hidden");
+        loadPosts();
+      } else alert("❌ Invalid login");
+    }
+
+    // 🔹 Register
+    async function register() {
+      const username = document.getElementById("regName").value;
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPwd").value;
+      const role = document.getElementById("regRole").value;
+
+      const res = await fetch(`${API_URL}/create_account`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password, role })
+      });
+
+      if (res.ok) alert("✅ Account created. Please login.");
+      else alert("❌ Error creating account");
+    }
+
+    // 🔹 Current user (/me)
+    async function getMe() {
+      const res = await fetch(`${API_URL}/me`, {
+        headers: { "Authorization": `Bearer ${accessToken}` },
+        credentials: "include"
+      });
+      if (res.ok) {
+        currentUser = await res.json();
+        document.getElementById("currentUser").textContent = currentUser.username;
+      }
+    }
+
+    // 🔹 Logout
+    async function logout() {
+      await fetch(`${API_URL}/logout`, { method: "POST", credentials: "include" });
+      accessToken = null;
+      currentUser = null;
+      document.getElementById("authSection").classList.remove("hidden");
+      document.getElementById("blogSection").classList.add("hidden");
+      document.getElementById("logoutBtn").classList.add("hidden");
+    }
+
+    // 🔹 Load posts
+    async function loadPosts() {
+      const container = document.getElementById("postsContainer");
+      container.innerHTML = "";
+
+      // For demo, load current user’s posts
+      const res = await fetch(`${API_URL}/posts/${1}`);
+      if (res.ok) {
+        const posts = await res.json();
+        posts.forEach(p => {
+          const div = document.createElement("div");
+          div.className = "post";
+          div.innerHTML = `
+            <h4>${p.title}</h4>
+            <p>${p.content}</p>
+            <button onclick="loadComments(${p.id})">View Comments</button>
+            <button onclick="deletePost(${currentUser.id}, ${p.id})">Delete</button>
+            <div id="comments-${p.id}"></div>
+            <input placeholder="Add comment" id="commentInput-${p.id}">
+            <button onclick="createComment(${currentUser.id}, ${p.id})">Add</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    // 🔹 Create Post
+    async function createPost() {
+      const title = document.getElementById("postTitle").value;
+      const content = document.getElementById("postContent").value;
+
+      const res = await fetch(`${API_URL}/create_post/${1}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title, content })
+      });
+
+      if (res.ok) {
+        alert("✅ Post created");
+        loadPosts();
+      } else alert("❌ Error creating post");
+    }
+
+    // 🔹 Delete Post
+    async function deletePost(userId, postId) {
+      const res = await fetch(`${API_URL}/delete_post/${userId}/${postId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${accessToken}` }
+      });
+      if (res.ok) {
+        alert("🗑 Post deleted");
+        loadPosts();
+      } else alert("❌ Error deleting post");
+    }
+
+    // 🔹 Load Comments
+    async function loadComments(postId) {
+      const res = await fetch(`${API_URL}/posts/${postId}/comments`);
+      if (res.ok) {
+        const comments = await res.json();
+        const container = document.getElementById(`comments-${postId}`);
+        container.innerHTML = "";
+        comments.forEach(c => {
+          const div = document.createElement("div");
+          div.className = "comment";
+          div.textContent = c.text;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    // 🔹 Create Comment
+    async function createComment(userId, postId) {
+      const text = document.getElementById(`commentInput-${postId}`).value;
+      const res = await fetch(`${API_URL}/create_comment/${userId}/${postId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+      if (res.ok) {
+        alert("💬 Comment added");
+        loadComments(postId);
+      } else alert("❌ Error adding comment");
+    }
+  </script>
+</body>
+</html>

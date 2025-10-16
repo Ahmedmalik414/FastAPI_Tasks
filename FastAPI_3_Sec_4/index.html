@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FastAPI Blog with Auth</title>
+  <style>
+    body { font-family: Arial; margin: 20px; background: #f4f4f9; }
+    h1 { text-align: center; }
+    .container { max-width: 800px; margin: auto; }
+    form { margin: 20px 0; padding: 15px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    input, textarea { width: 100%; padding: 8px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; }
+    button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .post { background: white; padding: 15px; margin: 15px 0; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .comments { margin-top: 10px; padding-left: 15px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>📖 Blog with Users (FastAPI + CORS)</h1>
+  <div class="container">
+
+    <!-- Signup Form -->
+    <form id="signupForm">
+      <h2>Sign Up</h2>
+      <input type="text" id="signupUsername" placeholder="Username" required>
+      <input type="email" id="signupEmail" placeholder="Email" required>
+      <input type="password" id="signupPassword" placeholder="Password" required>
+      <button type="submit">Register</button>
+    </form>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <h2>Login</h2>
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <input type="password" id="loginPassword" placeholder="Password" required>
+      <button type="submit">Login</button>
+    </form>
+
+    <!-- Create Post Form (only when logged in) -->
+    <form id="postForm" style="display:none;">
+      <h2>Create Post</h2>
+      <input type="text" id="title" placeholder="Title" required>
+      <textarea id="content" placeholder="Content" rows="3" required></textarea>
+      <button type="submit">Add Post</button>
+    </form>
+
+    <!-- Posts -->
+    <div id="posts"></div>
+  </div>
+
+  <script>
+    const apiBase = "http://127.0.0.1:8000";
+    let token = null;
+
+    // Signup
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      let username = document.getElementById("signupUsername").value;
+      let email = document.getElementById("signupEmail").value;
+      let password = document.getElementById("signupPassword").value;
+
+      let res = await fetch(`${apiBase}/signup?username=${username}&email=${email}&password=${password}`, { method: "POST" });
+      let data = await res.json();
+      alert(data.msg || data.detail);
+    });
+
+    // Login
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      let email = document.getElementById("loginEmail").value;
+      let password = document.getElementById("loginPassword").value;
+
+      let formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      let res = await fetch(`${apiBase}/login`, { method: "POST", body: formData });
+      let data = await res.json();
+      if (data.access_token) {
+        token = data.access_token;
+        document.getElementById("postForm").style.display = "block";
+        alert("Logged in!");
+      } else {
+        alert(data.detail || "Login failed");
+      }
+    });
+
+    // Create Post
+    document.getElementById("postForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      let title = document.getElementById("title").value;
+      let content = document.getElementById("content").value;
+
+      let res = await fetch(`${apiBase}/posts?title=${title}&content=${content}&token=${token}`, {
+        method: "POST"
+      });
+      await res.json();
+      loadPosts();
+    });
+
+    // Load Posts
+    async function loadPosts() {
+      let res = await fetch(`${apiBase}/posts`);
+      let data = await res.json();
+      let postsDiv = document.getElementById("posts");
+      postsDiv.innerHTML = "";
+
+      data.forEach(post => {
+        let postDiv = document.createElement("div");
+        postDiv.className = "post";
+        postDiv.innerHTML = `
+          <h2>${post.title} <small>by ${post.author}</small></h2>
+          <p>${post.content}</p>
+          <h4>Comments:</h4>
+          <div class="comments">
+            ${post.comments.length ? post.comments.map(c => `<p>💬 ${c}</p>`).join("") : "<i>No comments</i>"}
+          </div>
+          <form onsubmit="addComment(event, '${post.id}')">
+            <input type="text" id="comment-${post.id}" placeholder="Write a comment..." required>
+            <button type="submit">Add Comment</button>
+          </form>
+        `;
+        postsDiv.appendChild(postDiv);
+      });
+    }
+
+    // Add Comment
+    async function addComment(event, postId) {
+      event.preventDefault();
+      let commentInput = document.getElementById(`comment-${postId}`);
+      let comment = commentInput.value;
+
+      await fetch(`${apiBase}/posts/${postId}/comments?comment=${encodeURIComponent(comment)}`, {
+        method: "POST"
+      });
+
+      loadPosts();
+    }
+
+    // Load at startup
+    loadPosts();
+  </script>
+</body>
+</html>
